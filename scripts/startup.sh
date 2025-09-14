@@ -13,7 +13,7 @@ cd ..
 
 python -m http.server &
 python -m pyftpdlib &
-python src/redes.py &
+python src/pacotes.py &
 
 echo "Pressione Ctrl+C para terminar o programa"
 

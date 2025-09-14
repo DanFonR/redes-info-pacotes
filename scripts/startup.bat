@@ -1,8 +1,10 @@
 @ECHO OFF
 
-START /D .. "SERVIDOR HTTP" python -m http.server
-START /D .. "SERVIDOR FTP" python -m pyftpdlib
-START "GERADOR" python ..\src\redes.py
+START /D . "SERVIDOR HTTP" python -m http.server
+START /D . "SERVIDOR FTP" python -m pyftpdlib
+START "GERADOR" python .\src\pacotes.py
+
+python .\src\ip-host.py
 
 CHOICE /C T /N /M "PRESSIONE T PARA TERMINAR O PROGRAMA"
 IF ERRORLEVEL 1 (

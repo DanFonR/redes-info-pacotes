@@ -41,7 +41,8 @@ a necessidade de privilégios administrativos.
 
 ## Execução
 
-Execute `startup.cmd` no Windows, ou `sudo startup.sh` no Linux.
+No diretório raiz, execute `.\scripts\startup.bat` no Windows, 
+ou `sudo ./scripts/startup.sh` no Linux.
 
 ## Desinstalação
 
