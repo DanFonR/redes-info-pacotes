@@ -1,11 +1,11 @@
 # Volume de Tráfego de Dados por IP
 
-### Arthur Brito - 
+### Arthur Brito - 2312130001
 ### Dannyel F. Ribeiro - 2322130061
 ### Nálbert B. N. Bernardo - 2322130036
 ### Regimar D. Negreiros - 2322130016
-### Samuel R. Aguiar - 
-### Vitor Hugo C. Moura -  
+### Samuel R. Aguiar - 2312130106
+### Vitor Hugo C. Moura - 2312130182
 
 ## Sobre
 
@@ -42,11 +42,17 @@ a necessidade de privilégios administrativos.
 ## Execução
 
 No diretório raiz, execute `.\scripts\startup.bat` no Windows, 
-ou `sudo ./scripts/startup.sh` no Linux.
+ou `sudo -E ./scripts/startup.sh` no Linux.
+
+Para testar, em outras máquinas:
+  - HTTP: digite o IP do host seguido de `:8000` no navegador
+  - FTP: digite o IP do host seguido de `:2121` no caminho no 
+    explorador de arquivos
 
 ## Desinstalação
 
 Execute o comando `pip uninstall -r requirements.txt` no diretório raiz 
 (Aviso: caso não esteja em um ambiente virtual, esse comando removerá os 
 pacotes do sistema inteiro. 
-Caso haja necessidade, reinstale-os posteriormente).
+Caso haja necessidade, reinstale-os posteriormente), e, no Windows, desinstale 
+o Npcap.
