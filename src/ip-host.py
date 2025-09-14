@@ -1,14 +1,16 @@
 import socket
+from sys import stderr
 
-soc: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-ip: str
+soc: socket.socket = socket.socket(family=socket.AF_INET, #IPv4
+                                    type=socket.SOCK_DGRAM) # UDP
 
 try:
-    soc.connect(("8.8.8.8", 80))
-    ip = soc.getsockname()[0]
+    soc.connect(("8.8.8.8", 80)) # conexao teste ao dns da google
+    ip: str = soc.getsockname()[0]
+
+    print(f"USE ESSE IP PARA ACESSAR OS SERVIDORES: {ip}\n")
 except:
-    ip = "localhost"
+    print("erro: host nao pode ser obtido", file=stderr)
+    exit(1)
 finally:
     soc.close()
-
-print(f"USE ESSE IP PARA ACESSAR OS SERVIDORES: {ip}\n")
