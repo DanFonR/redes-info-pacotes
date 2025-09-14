@@ -1,19 +1,28 @@
-#!/bin/sh
+#!/bin/bash
 
-if [[ $EUID -ne 0 ]]; then
-    echo "Execute este script como superusuário"
-    read -p "Pressione qualquer tecla para sair..." -n1 -s
-    echo ""
+if [ $(whoami) != "root" ]; then
+    echo "Execute este script como superusuario"
     exit 1
 fi
 
-trap "kill -9 0" EXIT # termina quaisquer subprocessos ao sair do programa
+pacotes=("pyftpdlib" "scapy")
 
-cd ..
+for pkg in "${pacotes[@]}"; do
+    (pip freeze | grep -iq "$pkg") || {
+        >&2 echo "$pkg nao esta instalado"
+        exit 1
+    }
+done
 
-python -m http.server &
+if [ $(python src/ip-host.py) -ne 0 ]; then
+    exit 1
+fi
+
+trap "kill -9 0" INT # Em caso de Ctrl+C, elimina todos os subprocessos
+
 python -m pyftpdlib &
 python src/pacotes.py &
+python -m http.server &
 
 echo "Pressione Ctrl+C para terminar o programa"
 
