@@ -8,12 +8,14 @@ from sys import stderr
 from os import sep
 import logging as log
 import csv
-from signal import signal, SIGINT
+from signal import signal, SIGINT, Signals
+from ip_host import get_ip
 
 # Tipagem
 from _csv import Writer
 from scapy.layers.inet import IP
 from typing import TextIO
+from types import FrameType
 
 SRCPATH: str = __file__[:__file__.rindex(sep)]
 PATH: str = SRCPATH[:SRCPATH.rindex(sep)]
@@ -41,13 +43,20 @@ def hora() -> str:
 
 	return f"{data:%Y-%m-%d %H:%M:%S}"
 
+def sigint_handler(sig: Signals, frame: FrameType|None):
+	global interrompeu
+	interrompeu = True
+
 pacotes: PacketList
 csv_arquivo: TextIO
 bytes_ip: defaultdict[tuple[IP, str], dict[str, int]]
 writer: Writer
 
-log.basicConfig(filename=LOG_SAIDA, encoding="utf-8", level=log.INFO,
-				style='{', format="([{levelname}] - {asctime}): {message}")
+# Configuracoes iniciais para logging
+log.basicConfig(level=log.INFO,
+				style='{', format="([{levelname}] - {asctime}): {message}",
+				handlers=(log.FileHandler(LOG_SAIDA, encoding="utf-8"),
+						log.StreamHandler()))
 
 # Inicializa arquivo com header (newline='' conforme documentacao do modulo csv)
 with open(CSV_SAIDA, "w", newline='') as csv_arquivo:
@@ -62,10 +71,6 @@ with open(CSV_SAIDA, "w", newline='') as csv_arquivo:
 
 volta: int = 1
 interrompeu: bool = False
-
-def sigint_handler(sig, frame):
-	global interrompeu
-	interrompeu = True
 
 while True:
 	try:
@@ -84,7 +89,7 @@ while True:
 		del pacotes
 		exit(0)
 
-	bytes_ip = defaultdict(lambda: {"enviado": 0, "recebido": 0})
+	bytes_ip: defaultdict = defaultdict(lambda: {"enviado": 0, "recebido": 0})
 
 	for pacote in pacotes:
 		if IP not in pacote:
@@ -99,10 +104,12 @@ while True:
 		bytes_ip[(ip.dst, protocolo)]["recebido"] += tamanho
 
 	with open(CSV_SAIDA, "a", newline='') as csv_arquivo:
-		writer = csv.writer(csv_arquivo)
-
-		hora_atual: str = hora()
+		ip_bytes: IP
+		protocolo: str
 		tipo_ip: str
+		valores: dict[str, int]
+		writer = csv.writer(csv_arquivo)
+		hora_atual: str = hora()
 
 		for (ip_bytes, protocolo), valores in bytes_ip.items():
 			if ip_bytes == ip.src:
