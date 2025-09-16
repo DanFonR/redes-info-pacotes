@@ -1,4 +1,4 @@
-# Volume de Tráfego de Dados por IP
+# NetLogger - Captura de Pacotes de Rede
 
 ### Arthur Brito - 2312130001
 ### Dannyel F. Ribeiro - 2322130061
@@ -9,50 +9,93 @@
 
 ## Sobre
 
-Este repositório trata-se da exposição do tráfego de entrada e saída 
-de um servidor. Os dados sobre os pacotes são escritos em um arquivo CSV, 
-que é acessado pelo Excel para exibição.
+Este projeto permite monitorar o tráfego de entrada e saída de um servidor.
+Os dados sobre os pacotes são registrados em um arquivo CSV, que pode ser aberto no Excel ou outro visualizador de planilhas.
 
-O script cria um servidor HTTP e outro FTP para testes.
+O script cria servidores **HTTP** e **FTP** para testes de captura de pacotes.
 
 ## Instalação
 
 ### Requisitos Python
 
-- Scapy: biblioteca de manipulação de pacotes
-- pyftpdlib: biblioteca e ferramenta de criação rápida de servidor FTP
+* [Scapy](https://scapy.net/) – biblioteca para manipulação de pacotes de rede.
+* [pyftpdlib](https://pyftpdlib.readthedocs.io/) – biblioteca para criação rápida de servidor FTP.
 
-Instale-os com `pip install -r requirements.txt` no diretório raiz.
-  
-Apesar de ser boa prática, o uso de um ambiente virtual nesse caso 
-não é recomendado, pois é lento demais para a captura de pacotes 
-no devido tempo.
+Instale as dependências com:
+
+```bash
+pip install -r requirements.txt
+```
+
+> ⚠️ Apesar de ser prática, a utilização de ambientes virtuais **não é recomendada** neste projeto, pois pode impactar a performance da captura de pacotes em tempo real.
 
 ### Windows
 
-Para executar no Windows, instale o programa [Npcap](https://npcap.com/), 
-e, durante a instalação, selecione as opções _Install Npcap in WinPcap_ 
-_API-compatible mode_ e _Support raw 802.11 traffic (and monitor mode)_ 
-_for wireless adapters_. Reinicie o computador se necessário.
+Para rodar no Windows, instale o [Npcap](https://npcap.com/).
 
-Esse programa fornece a API de captura de pacotes necessária 
-para o Scapy funcionar no Windows, e o modo de compatibilidade evita 
-a necessidade de privilégios administrativos.
+O Npcap fornece a API necessária para captura de pacotes pelo Scapy, e o modo compatível evita a necessidade de privilégios administrativos.
 
 ## Execução
 
-No diretório raiz, execute `.\scripts\startup.bat` no Windows, 
-ou `sudo -E ./scripts/startup.sh` no Linux.
+No diretório raiz do projeto:
 
-Para testar, em outras máquinas:
-  - HTTP: digite o IP do host seguido de `:8000` no navegador
-  - FTP: digite o IP do host seguido de `:2121` no caminho no 
-    explorador de arquivos
+* **Windows:**
+
+```bat
+.\scripts\startup.bat
+```
+
+* **Linux/macOS:**
+
+```bash
+sudo -E ./scripts/startup.sh
+```
+
+Para testar em outras máquinas:
+
+* **HTTP:** acesse `http://<IP_DO_HOST>:8000` no navegador.
+* **FTP:** acesse `ftp://<IP_DO_HOST>:2121` no explorador de arquivos.
+
+> ⚠️ No Linux, a captura de pacotes normalmente requer privilégios de administrador (`sudo`).
 
 ## Desinstalação
 
-Execute o comando `pip uninstall -r requirements.txt` no diretório raiz 
-(Aviso: caso não esteja em um ambiente virtual, esse comando removerá os 
-pacotes do sistema inteiro. 
-Caso haja necessidade, reinstale-os posteriormente), e, no Windows, desinstale 
-o Npcap.
+* Python:
+
+```bash
+pip uninstall -r requirements.txt
+```
+
+> ⚠️ Caso não utilize um ambiente virtual, este comando removerá pacotes do sistema. Reinstale-os posteriormente se necessário.
+
+* **Windows:** desinstale o Npcap pelo painel de controle.
+
+## Desenvolvimento
+
+Instale as dependências de desenvolvimento:
+```bash
+pip install -r requirements-dev.txt
+```
+
+O projeto segue o **padrão de código PEP8**.
+A verificação e formatação podem ser feitas usando os scripts incluídos:
+
+* **Linux/macOS:** `./scripts/PEP8.sh`
+* **Windows:** `.\scripts\PEP8.bat`
+
+Esses scripts executam:
+
+* `isort` → organiza os imports
+* `black` → formata o código automaticamente
+* `flake8` → verifica estilo e possíveis problemas
+
+O código possui **testes unitários e de integração** utilizando `pytest`.
+Os testes verificam:
+
+* Captura de pacotes
+* Geração correta do CSV
+* Criação de logs
+* Tratamento de exceções e interrupções manuais
+
+> 💡 É recomendado rodar os scripts antes de commits para garantir consistência no estilo do código.
+
