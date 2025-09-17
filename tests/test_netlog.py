@@ -8,17 +8,17 @@ from netlog import NetLogger
 
 # Fixture para NetLogger com CSV temporário
 @pytest.fixture
-def netlogger(tmp_path):
+def netlogger(tmp_path) -> NetLogger:
     csv_file = tmp_path / "test.csv"
     log_file = tmp_path / "test.log"
     return NetLogger(str(csv_file), str(log_file))
 
 
-def fake_packet(src="1.1.1.1", dst="2.2.2.2", proto=6, size=100):
+def fake_packet(src="1.1.1.1", dst="2.2.2.2", proto=6, size=100) -> MagicMock:
     """Cria um pacote falso com IP e tamanho definidos."""
-    pkt = MagicMock()
+    pkt: MagicMock = MagicMock()
     pkt.__contains__.side_effect = lambda x: x == IP
-    ip = MagicMock()
+    ip: MagicMock = MagicMock()
     ip.src = src
     ip.dst = dst
     ip.proto = proto
@@ -27,9 +27,9 @@ def fake_packet(src="1.1.1.1", dst="2.2.2.2", proto=6, size=100):
     return pkt
 
 
-def test_processa_pacotes_single_logging(netlogger):
+def test_processa_pacotes_single_logging(netlogger: NetLogger) -> None:
     """Pacote único gera CSV e log corretos."""
-    pkt = fake_packet()
+    pkt: MagicMock = fake_packet()
     with (
         patch("netlog.sniff", return_value=[pkt]),
         patch("netlog.logging") as mock_log,
@@ -45,8 +45,10 @@ def test_processa_pacotes_single_logging(netlogger):
         assert len(lines) == 3
 
 
-def test_processa_pacotes_multiple_logging(netlogger):
+def test_processa_pacotes_multiple_logging(netlogger: NetLogger) -> None:
     """Múltiplos pacotes geram CSV e log corretos."""
+    pkt1: MagicMock
+    pkt2: MagicMock
     pkt1 = fake_packet(src="1.1.1.1", dst="2.2.2.2", proto=6, size=50)
     pkt2 = fake_packet(src="3.3.3.3", dst="4.4.4.4", proto=17, size=70)
 
@@ -64,7 +66,7 @@ def test_processa_pacotes_multiple_logging(netlogger):
         assert len(lines) == 5
 
 
-def test_run_interruption(monkeypatch, netlogger):
+def test_run_interruption(monkeypatch, netlogger: NetLogger) -> None:
     """Testa run() com interrupção imediata (interrompeu=True)."""
     netlogger.interrompeu = True
 
@@ -79,7 +81,7 @@ def test_run_interruption(monkeypatch, netlogger):
         mock_log.info.assert_called_with("Execução interrompida manualmente")
 
 
-def test_run_exception_logging(netlogger):
+def test_run_exception_logging(netlogger: NetLogger) -> None:
     with (
         patch("netlog.sniff", side_effect=Exception("Erro fake")),
         patch("netlog.logging") as mock_log,

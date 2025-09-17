@@ -2,3 +2,5 @@ __pycache__/
 .venv
 *.csv
 *.log
+.vscode/
+.pytest_cache/

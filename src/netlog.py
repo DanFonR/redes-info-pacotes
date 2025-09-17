@@ -7,14 +7,14 @@ No Windows, certifique-se que o Npcap está instalado.
 
 import csv
 import logging
-from _csv import Writer
 from collections import defaultdict
 from datetime import datetime
 from signal import SIGINT, signal
 from sys import stderr
 from types import FrameType
 
-from scapy.all import sniff, Packet, PacketList
+from _csv import Writer
+from scapy.all import Packet, PacketList, sniff
 from scapy.layers.inet import IP
 
 PROTOCOLOS: dict[int, str] = {
@@ -29,6 +29,7 @@ PROTOCOLOS: dict[int, str] = {
     58: "IPV6-ICMP",
 }
 
+
 def hora() -> str:
     """
     Retorna a data e hora atual formatada como 'YYYY-MM-DD HH:MM:SS'.
@@ -38,6 +39,7 @@ def hora() -> str:
     """
 
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
 
 class NetLogger:
     """
@@ -70,8 +72,8 @@ class NetLogger:
             style="{",
             handlers=[
                 logging.FileHandler(filename=log_path, encoding="utf-8"),
-                logging.StreamHandler()
-            ]
+                logging.StreamHandler(),
+            ],
         )
 
         self._setup_csv()
@@ -118,9 +120,9 @@ class NetLogger:
         """
 
         pacote: Packet
+        bytes_ip: defaultdict
         pacotes: PacketList = sniff(timeout=timeout)
-        bytes_ip: defaultdict = defaultdict(lambda: {"enviado": 0,
-                                                     "recebido": 0})
+        bytes_ip = defaultdict(lambda: {"enviado": 0, "recebido": 0})
 
         for pacote in pacotes:
             if IP not in pacote:
@@ -158,16 +160,18 @@ class NetLogger:
         Executa o loop de captura contínua até interrupção manual.
         """
 
+        msg: str
+
         while not self.interrompeu:
             try:
                 self.processa_pacotes()
             except Exception as ex:
-                logging.warning(
-                    f"Erro durante captura: {type(ex).__name__}: {ex}"
-                )
+                msg = "Erro durante captura: " f"{type(ex).__name__}: {ex}"
+                logging.warning(msg)
 
         print("Interrompendo...", file=stderr)
         logging.info("Execução interrompida manualmente")
+
 
 if __name__ == "__main__":
     import os

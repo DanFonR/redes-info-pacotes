@@ -4,8 +4,9 @@ Módulo para obter o IP local da máquina.
 O IP retornado é o utilizado para acessar a internet/servidores.
 """
 
-from socket import socket, AF_INET, SOCK_DGRAM
+from socket import AF_INET, SOCK_DGRAM, socket
 from sys import stderr
+
 
 def get_local_ip() -> str:
     """
@@ -35,6 +36,7 @@ def get_local_ip() -> str:
     finally:
         soc.close()
 
+
 def main() -> None:
     """
     Função principal para execução do módulo como script.
@@ -49,6 +51,7 @@ def main() -> None:
     except RuntimeError as runtime_error:
         print(f"erro: {runtime_error}", file=stderr)
         exit(1)
+
 
 if __name__ == "__main__":
     main()
