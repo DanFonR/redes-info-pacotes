@@ -13,7 +13,7 @@ for pkg in "${pacotes[@]}"; do
     }
 done
 
-if [ "$(python src/ip-host.py)" -ne 0 ]; then
+if [ "$(python src/ip.py)" -ne 0 ]; then
     exit 1
 fi
 

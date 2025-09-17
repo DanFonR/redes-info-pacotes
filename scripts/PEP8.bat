@@ -1,29 +1,29 @@
-@echo off
+@ECHO OFF
 
-REM Obtém o diretório do script e volta um nível
+:: Obtém o diretório do script e volta um nível
 SET SCRIPT_DIR=%~dp0
 SET SCRIPT_DIR=%SCRIPT_DIR:~0,-1%
 PUSHD %SCRIPT_DIR%\..
 
-REM Verifica se os pacotes estão instalados
-for %%P in (isort black flake8) do (
-    pip show %%P >nul 2>&1
-    if errorlevel 1 (
-        echo %%P nao esta instalado
+:: Verifica se os pacotes estão instalados
+FOR %%P IN (isort black flake8) do (
+    pip show %%P >NUL 2>&1
+    IF ERRORLEVEL 1 (
+        ECHO %%P nao esta instalado
         POPD
-        exit /b 1
+        EXIT /B 1
     )
 )
 
-echo Rodando isort...
+ECHO Rodando isort...
 isort .
 
-echo Rodando black...
+ECHO Rodando black...
 black .
 
-echo Rodando flake8...
+ECHO Rodando flake8...
 flake8 .
 
-echo Concluído! Código formatado e verificado.
+ECHO Concluído! Código formatado e verificado.
 
 POPD

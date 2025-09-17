@@ -1,6 +1,6 @@
 @ECHO OFF
 
-python .\src\ip_host.py
+python .\src\ip.py
 IF ERRORLEVEL 1 (
     CALL :KILLSCRIPT
     EXIT /B %ERRORLEVEL%
@@ -8,6 +8,11 @@ IF ERRORLEVEL 1 (
 
 START /D . /MIN "SERVIDOR HTTP" python -m http.server
 START /D . /MIN "SERVIDOR FTP" python -m pyftpdlib
+IF ERRORLEVEL 1 (
+    CALL :KILLSCRIPT
+    EXIT /B %ERRORLEVEL%
+)
+
 START "GERADOR" python .\src\pacotes.py
 
 CHOICE /C T /N /M "PRESSIONE T PARA [T]ERMINAR O PROGRAMA"

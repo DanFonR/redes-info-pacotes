@@ -4,9 +4,8 @@ Módulo para obter o IP local da máquina.
 O IP retornado é o utilizado para acessar a internet/servidores.
 """
 
-import socket
-import sys
-
+from socket import socket, AF_INET, SOCK_DGRAM
+from sys import stderr
 
 def get_local_ip() -> str:
     """
@@ -23,16 +22,18 @@ def get_local_ip() -> str:
     Raises:
         RuntimeError: Se não for possível determinar o IP local.
     """
-    soc = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+
+    # familia de endereco para IPv4 (formato: (endereco, porta)), tipo UDP
+    soc: socket = socket(family=AF_INET, type=SOCK_DGRAM)
+
     try:
         soc.connect(("8.8.8.8", 80))  # conexão teste ao DNS do Google
         return soc.getsockname()[0]
-    except OSError as e:
+    except OSError as os_error:
         # Captura apenas erros relacionados a socket/rede
-        raise RuntimeError("Host não pode ser obtido") from e
+        raise RuntimeError("Host não pode ser obtido") from os_error
     finally:
         soc.close()
-
 
 def main() -> None:
     """
@@ -41,13 +42,13 @@ def main() -> None:
     Obtém o IP local e imprime no console. Caso ocorra erro, escreve no stderr
     e encerra o programa com código de erro 1.
     """
-    try:
-        ip = get_local_ip()
-        print(f"USE ESSE IP PARA ACESSAR OS SERVIDORES: {ip}\n")
-    except RuntimeError as e:
-        print(f"erro: {e}", file=sys.stderr)
-        sys.exit(1)
 
+    try:
+        ip: str = get_local_ip()
+        print(f"USE ESSE IP PARA ACESSAR OS SERVIDORES: {ip}\n")
+    except RuntimeError as runtime_error:
+        print(f"erro: {runtime_error}", file=stderr)
+        exit(1)
 
 if __name__ == "__main__":
     main()

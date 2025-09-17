@@ -31,9 +31,13 @@ pip install -r requirements.txt
 
 ### Windows
 
-Para rodar no Windows, instale o [Npcap](https://npcap.com/).
+Para rodar no Windows, instale o [Npcap](https://npcap.com/) e marque as opções:
+  - _Support raw 802.11 traffic (and monitor mode) for wireless adapters_; e
+  - _Install Npcap in WinPcap API-compatible mode_.
 
-O Npcap fornece a API necessária para captura de pacotes pelo Scapy, e o modo compatível evita a necessidade de privilégios administrativos.
+O Npcap fornece a API necessária para captura de pacotes pelo Scapy. 
+O modo de compatibilidade evita a necessidade de privilégios administrativos, 
+e o suporte ao tráfego 802.11 habilita escuta de conexões _wireless_.
 
 ## Execução
 
@@ -98,4 +102,3 @@ Os testes verificam:
 * Tratamento de exceções e interrupções manuais
 
 > 💡 É recomendado rodar os scripts antes de commits para garantir consistência no estilo do código.
-

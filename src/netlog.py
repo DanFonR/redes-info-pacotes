@@ -7,16 +7,17 @@ No Windows, certifique-se que o Npcap está instalado.
 
 import csv
 import logging
+from _csv import Writer
 from collections import defaultdict
 from datetime import datetime
 from signal import SIGINT, signal
 from sys import stderr
-from typing import Dict
+from types import FrameType
 
-from scapy.all import sniff
+from scapy.all import sniff, Packet, PacketList
 from scapy.layers.inet import IP
 
-PROTOCOLOS: Dict[int, str] = {
+PROTOCOLOS: dict[int, str] = {
     # Tabela de protocolos IANA (apenas alguns exemplos)
     1: "ICMP",
     2: "IGMP",
@@ -28,7 +29,6 @@ PROTOCOLOS: Dict[int, str] = {
     58: "IPV6-ICMP",
 }
 
-
 def hora() -> str:
     """
     Retorna a data e hora atual formatada como 'YYYY-MM-DD HH:MM:SS'.
@@ -36,8 +36,8 @@ def hora() -> str:
     Returns:
         str: Data e hora atual formatada.
     """
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 class NetLogger:
     """
@@ -58,25 +58,28 @@ class NetLogger:
             csv_path (str): Caminho do arquivo CSV de saída.
             log_path (str): Caminho do arquivo de log.
         """
+
         self.csv_path = csv_path
         self.log_path = log_path
         self.interrompeu = False
         self.numero_iteracao = 1
 
         logging.basicConfig(
-            filename=log_path,
-            encoding="utf-8",
             level=logging.INFO,
             format="([{levelname}] - {asctime}): {message}",
             style="{",
+            handlers=[
+                logging.FileHandler(filename=log_path, encoding="utf-8"),
+                logging.StreamHandler()
+            ]
         )
 
-        self.setup_csv()
+        self._setup_csv()
 
         # Captura CTRL+C
-        signal(SIGINT, self.sigint_handler)
+        signal(SIGINT, self.__sigint_handler)
 
-    def sigint_handler(self, sig: int, frame) -> None:
+    def __sigint_handler(self, sig: int, frame: FrameType) -> None:
         """
         Handler para sinal SIGINT (CTRL+C) para interrupção manual.
 
@@ -84,14 +87,16 @@ class NetLogger:
             sig (int): Número do sinal.
             frame: Frame do sinal (não usado).
         """
+
         self.interrompeu = True
 
-    def setup_csv(self) -> None:
+    def _setup_csv(self) -> None:
         """
         Inicializa o arquivo CSV com cabeçalho.
         """
+
         with open(self.csv_path, "w", newline="") as f:
-            writer = csv.writer(f)
+            writer: Writer = csv.writer(f)
             writer.writerow(
                 [
                     "data_hora",
@@ -111,21 +116,27 @@ class NetLogger:
             timeout (int, optional):
             Tempo em segundos para captura de pacotes. 5 por padrão.
         """
-        pacotes = sniff(timeout=timeout)
-        bytes_ip = defaultdict(lambda: {"enviado": 0, "recebido": 0})
+
+        pacote: Packet
+        pacotes: PacketList = sniff(timeout=timeout)
+        bytes_ip: defaultdict = defaultdict(lambda: {"enviado": 0,
+                                                     "recebido": 0})
 
         for pacote in pacotes:
             if IP not in pacote:
                 continue
-            ip = pacote[IP]
+
+            ip: IP = pacote[IP]
             protocolo = PROTOCOLOS.get(ip.proto, "Outro")
             tamanho = len(pacote)
             bytes_ip[(ip.src, protocolo)]["enviado"] += tamanho
             bytes_ip[(ip.dst, protocolo)]["recebido"] += tamanho
 
-        hora_atual = hora()
+        hora_atual: str = hora()
+
         with open(self.csv_path, "a", newline="") as f:
-            writer = csv.writer(f)
+            writer: Writer = csv.writer(f)
+
             for (ip_end, protocolo), valores in bytes_ip.items():
                 tipo = "remetente" if ip_end == ip.src else "destino"
                 writer.writerow(
@@ -146,17 +157,17 @@ class NetLogger:
         """
         Executa o loop de captura contínua até interrupção manual.
         """
+
         while not self.interrompeu:
             try:
                 self.processa_pacotes()
-            except Exception as e:
+            except Exception as ex:
                 logging.warning(
-                    f"Erro durante captura: {type(e).__name__}: {e}",
+                    f"Erro durante captura: {type(ex).__name__}: {ex}"
                 )
 
         print("Interrompendo...", file=stderr)
         logging.info("Execução interrompida manualmente")
-
 
 if __name__ == "__main__":
     import os
@@ -167,5 +178,5 @@ if __name__ == "__main__":
     CSV_SAIDA: str = os.path.join(PATH, "netlog.csv")
     LOG_SAIDA: str = os.path.join(PATH, "netlog_stat.log")
 
-    logger = NetLogger(CSV_SAIDA, LOG_SAIDA)
+    logger: NetLogger = NetLogger(CSV_SAIDA, LOG_SAIDA)
     logger.run()
