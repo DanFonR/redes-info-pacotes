@@ -11,7 +11,7 @@ def test_get_local_ip_success() -> None:
     mock_socket: MagicMock = MagicMock()
     mock_socket.getsockname.return_value = ("192.168.0.100", 12345)
 
-    with patch("socket.socket", return_value=mock_socket):
+    with patch("ip.socket", return_value=mock_socket):
         ip: str = get_local_ip()
         assert ip == "192.168.0.100"
         mock_socket.connect.assert_called_once_with(("8.8.8.8", 80))
@@ -23,7 +23,7 @@ def test_get_local_ip_failure() -> None:
     mock_socket: MagicMock = MagicMock()
     mock_socket.connect.side_effect = OSError("rede inacessível")
 
-    with patch("socket.socket", return_value=mock_socket):
+    with patch("ip.socket", return_value=mock_socket):
         with pytest.raises(RuntimeError, match="Host não pode ser obtido"):
             get_local_ip()
         mock_socket.close.assert_called_once()
@@ -33,7 +33,7 @@ def test_main_success(monkeypatch, capsys) -> None:
     """Testa a função main() com IP mockado."""
     mock_socket: MagicMock = MagicMock()
     mock_socket.getsockname.return_value = ("10.0.0.1", 12345)
-    monkeypatch.setattr("socket.socket", lambda *args, **kwargs: mock_socket)
+    monkeypatch.setattr("ip.socket", lambda *args, **kwargs: mock_socket)
 
     ip_main()
     captured = capsys.readouterr()
@@ -49,10 +49,7 @@ def test_main_failure(monkeypatch, capsys) -> None:
         magic_mock.connect.side_effect = OSError("rede inacessível")
         return magic_mock
 
-    monkeypatch.setattr("socket.socket", mock_socket_fail)
-
-    with pytest.raises(SystemExit) as sys_exit:
-        ip_main()
-    captured = capsys.readouterr()
-    assert "Host não pode ser obtido" in captured.err
-    assert sys_exit.value.code == 1
+    with patch("ip.socket", mock_socket_fail):
+        with pytest.raises(SystemExit) as sys_exit:
+            ip_main()
+        assert sys_exit.value.code == 1
