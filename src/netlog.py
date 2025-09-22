@@ -7,6 +7,7 @@ No Windows, certifique-se que o Npcap está instalado.
 
 import csv
 import logging
+import sys
 from collections import defaultdict
 from datetime import datetime
 from signal import SIGINT, signal
@@ -16,6 +17,7 @@ from types import FrameType
 from _csv import Writer
 from scapy.all import Packet, PacketList, sniff
 from scapy.layers.inet import IP
+from ip import get_local_ip
 
 PROTOCOLOS: dict[int, str] = {
     # Tabela de protocolos IANA (apenas alguns exemplos)
@@ -61,10 +63,11 @@ class NetLogger:
             log_path (str): Caminho do arquivo de log.
         """
 
-        self.csv_path = csv_path
-        self.log_path = log_path
-        self.interrompeu = False
-        self.numero_iteracao = 1
+        self.csv_path: str = csv_path
+        self.log_path: str = log_path
+        self.interrompeu: bool = False
+        self.numero_iteracao: int = 1
+        self.conexoes: set[str]
 
         logging.basicConfig(
             level=logging.INFO,
@@ -75,6 +78,12 @@ class NetLogger:
                 logging.StreamHandler(),
             ],
         )
+
+        try:
+            self.conexoes = {get_local_ip()}
+        except RuntimeError:
+            print(f"erro ao obter ip do servidor", file=sys.stderr)
+            exit(1)
 
         self._setup_csv()
 
@@ -129,6 +138,9 @@ class NetLogger:
                 continue
 
             ip: IP = pacote[IP]
+            if ip.src not in self.conexoes or ip.dst not in self.conexoes:
+                continue
+
             protocolo = PROTOCOLOS.get(ip.proto, "Outro")
             tamanho = len(pacote)
             bytes_ip[(ip.src, protocolo)]["enviado"] += tamanho
