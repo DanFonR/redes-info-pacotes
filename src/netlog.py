@@ -18,6 +18,7 @@ from _csv import Writer
 from scapy.all import Packet, PacketList, sniff
 from scapy.layers.inet import IP
 from ip import get_local_ip
+from servers import get_ips
 
 PROTOCOLOS: dict[int, str] = {
     # Tabela de protocolos IANA (apenas alguns exemplos)
@@ -49,35 +50,22 @@ class NetLogger:
 
     Attributes:
         csv_path (str): Caminho do arquivo CSV de saída.
-        log_path (str): Caminho do arquivo de log.
         interrompeu (bool): Flag para indicar interrupção manual.
         numero_iteracao (int): Contador de iterações.
     """
 
-    def __init__(self, csv_path: str, log_path: str):
+    def __init__(self, csv_path: str):
         """
         Inicializa o NetLogger, configurando CSV e log.
 
         Args:
             csv_path (str): Caminho do arquivo CSV de saída.
-            log_path (str): Caminho do arquivo de log.
         """
 
         self.csv_path: str = csv_path
-        self.log_path: str = log_path
         self.interrompeu: bool = False
         self.numero_iteracao: int = 1
         self.conexoes: set[str]
-
-        logging.basicConfig(
-            level=logging.INFO,
-            format="([{levelname}] - {asctime}): {message}",
-            style="{",
-            handlers=[
-                logging.FileHandler(filename=log_path, encoding="utf-8"),
-                logging.StreamHandler(),
-            ],
-        )
 
         try:
             self.conexoes = {get_local_ip()}
@@ -132,6 +120,8 @@ class NetLogger:
         bytes_ip: defaultdict
         pacotes: PacketList = sniff(timeout=timeout)
         bytes_ip = defaultdict(lambda: {"enviado": 0, "recebido": 0})
+
+        self.conexoes |= get_ips()
 
         for pacote in pacotes:
             if IP not in pacote:
