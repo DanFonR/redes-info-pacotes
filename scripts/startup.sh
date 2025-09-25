@@ -19,9 +19,7 @@ fi
 
 trap "kill -9 0" INT # Em caso de Ctrl+C, elimina todos os subprocessos
 
-python -m pyftpdlib &
-python src/netlog.py &
-python -m http.server &
+python src/main.py &
 
 echo "Pressione Ctrl+C para terminar o programa"
 

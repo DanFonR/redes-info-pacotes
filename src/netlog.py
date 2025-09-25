@@ -17,6 +17,7 @@ from types import FrameType
 from _csv import Writer
 from scapy.all import Packet, PacketList, sniff
 from scapy.layers.inet import IP
+
 from ip import get_local_ip
 from servers import get_ips
 
@@ -70,7 +71,7 @@ class NetLogger:
         try:
             self.conexoes = {get_local_ip()}
         except RuntimeError:
-            print(f"erro ao obter ip do servidor", file=sys.stderr)
+            print("erro ao obter ip do servidor", file=sys.stderr)
             exit(1)
 
         self._setup_csv()
@@ -112,7 +113,7 @@ class NetLogger:
         Captura pacotes por um período e registra estatísticas em CSV e log.
 
         Args:
-            timeout (int, optional):
+            timeout (int, optional): \
             Tempo em segundos para captura de pacotes. 5 por padrão.
         """
 
@@ -121,10 +122,10 @@ class NetLogger:
         pacotes: PacketList = sniff(timeout=timeout)
         bytes_ip = defaultdict(lambda: {"enviado": 0, "recebido": 0})
 
-        self.conexoes |= get_ips()
+        self.conexoes |= get_ips()  # atualiza lista de IPs conectados
 
         for pacote in pacotes:
-            if IP not in pacote:
+            if IP not in pacote:  # evita pacotes com ICMP ou IGMP, por exemplo
                 continue
 
             ip: IP = pacote[IP]
@@ -142,7 +143,7 @@ class NetLogger:
             writer: Writer = csv.writer(f)
 
             for (ip_end, protocolo), valores in bytes_ip.items():
-                tipo = "remetente" if ip_end == ip.src else "destino"
+                tipo: str = "remetente" if ip_end == ip.src else "destino"
                 writer.writerow(
                     [
                         hora_atual,

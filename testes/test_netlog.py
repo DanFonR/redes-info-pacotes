@@ -1,5 +1,5 @@
-from unittest.mock import MagicMock, patch
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 from scapy.layers.inet import IP
@@ -11,12 +11,13 @@ from netlog import NetLogger
 @pytest.fixture
 def netlogger(tmp_path: Path) -> NetLogger:
     csv_file: Path = tmp_path / "test.csv"
-    log_file: Path = tmp_path / "test.log"
-    return NetLogger(str(csv_file), str(log_file))
+    return NetLogger(str(csv_file))
 
 
 def fake_packet(src="1.1.1.1", dst="2.2.2.2", proto=6, size=100) -> MagicMock:
-    """Cria um pacote falso com IP e tamanho definidos."""
+    """
+    Cria um pacote falso com IP e tamanho definidos.
+    """
 
     ip: MagicMock = MagicMock()
     ip.src = src
@@ -32,7 +33,9 @@ def fake_packet(src="1.1.1.1", dst="2.2.2.2", proto=6, size=100) -> MagicMock:
 
 
 def test_processa_pacotes_single_logging(netlogger: NetLogger) -> None:
-    """Pacote único gera CSV e log corretos."""
+    """
+    Pacote único gera CSV e log corretos.
+    """
 
     pkt: MagicMock = fake_packet()
     with (
@@ -51,7 +54,9 @@ def test_processa_pacotes_single_logging(netlogger: NetLogger) -> None:
 
 
 def test_processa_pacotes_multiple_logging(netlogger: NetLogger) -> None:
-    """Múltiplos pacotes geram CSV e log corretos."""
+    """
+    Múltiplos pacotes geram CSV e log corretos.
+    """
 
     pkt1: MagicMock
     pkt2: MagicMock
@@ -73,7 +78,9 @@ def test_processa_pacotes_multiple_logging(netlogger: NetLogger) -> None:
 
 
 def test_run_interruption(monkeypatch, netlogger: NetLogger) -> None:
-    """Testa run() com interrupção imediata (interrompeu=True)."""
+    """
+    Testa run() com interrupção imediata (interrompeu=True).
+    """
 
     netlogger.interrompeu = True
 

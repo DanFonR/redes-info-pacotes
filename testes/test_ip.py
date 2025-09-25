@@ -8,7 +8,10 @@ from ip import main as ip_main
 
 
 def test_get_local_ip_success() -> None:
-    """Testa se get_local_ip retorna o IP correto com socket.gethostbyname mockado."""
+    """
+    Testa se get_local_ip retorna o IP correto
+    com socket.gethostbyname mockado.
+    """
 
     mock_ip: str = "192.168.0.100"  # ip arbitrario
 
@@ -21,27 +24,39 @@ def test_get_local_ip_success() -> None:
 
 
 def test_get_local_ip_failure() -> None:
-    """Testa se get_local_ip levanta RuntimeError quando socket falha."""
+    """
+    Testa se get_local_ip levanta RuntimeError quando socket falha.
+    """
 
-    with patch("socket.gethostbyname", side_effect=socket.error("rede inacessível")):
+    efeito: OSError = socket.error("rede inacessível")
+
+    with patch("socket.gethostbyname", side_effect=efeito):
         with pytest.raises(RuntimeError, match="Host não pode ser obtido"):
             get_local_ip()
 
 
 def test_main_success(capsys: pytest.CaptureFixture) -> None:
-    """Testa a função main() com IP mockado."""
+    """
+    Testa a função ip.main() com IP mockado.
+    """
 
-    with patch("ip.get_local_ip", return_value="10.0.0.1"):
+    mock_ip: str = "10.0.0.1"
+
+    with patch("ip.get_local_ip", return_value=mock_ip):
         ip_main()
         captured = capsys.readouterr()
-        assert "10.0.0.1" in captured.out
-        assert captured.err == ""
+        assert mock_ip in captured.out
+        assert not captured.err
 
 
 def test_main_failure(capsys: pytest.CaptureFixture) -> None:
-    """Testa a função main() quando get_local_ip falha."""
+    """
+    Testa a função main() quando get_local_ip falha.
+    """
 
-    with patch("ip.get_local_ip", side_effect=RuntimeError("Erro simulado")):
+    efeito: RuntimeError = RuntimeError("Erro simulado")
+
+    with patch("ip.get_local_ip", side_effect=efeito):
         with pytest.raises(SystemExit) as sys_exit:
             ip_main()
         assert sys_exit.value.code == 1

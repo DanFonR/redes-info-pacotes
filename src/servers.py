@@ -1,15 +1,16 @@
-import os
 import logging
+import os
+from http.server import HTTPServer, SimpleHTTPRequestHandler
 from threading import Lock, Thread
-from http.server import SimpleHTTPRequestHandler, HTTPServer
+
 from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.handlers import FTPHandler
 from pyftpdlib.servers import FTPServer
-from time import sleep
 
 LOCK: Lock = Lock()
 
 ip_set: set[str] = set()
+
 
 class LoggingHTTPHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -22,6 +23,7 @@ class LoggingHTTPHandler(SimpleHTTPRequestHandler):
 
         super().do_GET()
 
+
 class LoggingFTPHandler(FTPHandler):
     def on_connect(self, username: str) -> None:
         client_ip = self.remote_ip
@@ -30,11 +32,12 @@ class LoggingFTPHandler(FTPHandler):
         with LOCK:
             ip_set.add(client_ip)
 
+
 class Server:
     http_port: int
     ftp_port: int
-    http_thread: Thread|None
-    ftp_thread: Thread|None
+    http_thread: Thread | None
+    ftp_thread: Thread | None
 
     def __init__(self, http_port: int = 8000, ftp_port: int = 2121):
         self.http_port = http_port
@@ -44,7 +47,7 @@ class Server:
 
     def start_http_server(self):
         handler: LoggingHTTPHandler = LoggingHTTPHandler
-        server: HTTPServer = HTTPServer(('0.0.0.0', self.http_port), handler)
+        server: HTTPServer = HTTPServer(("0.0.0.0", self.http_port), handler)
 
         logging.info(f"Inicializando servidor HTTP na porta {self.http_port}")
         server.serve_forever()
@@ -53,12 +56,12 @@ class Server:
         authorizer: DummyAuthorizer = DummyAuthorizer()
 
         # Permite acesso anonimo
-        authorizer.add_anonymous(os.getcwd(), perm='elradfmw')
+        authorizer.add_anonymous(os.getcwd(), perm="elradfmw")
 
         handler: LoggingFTPHandler = LoggingFTPHandler
         handler.authorizer = authorizer
 
-        server = FTPServer(('0.0.0.0', self.ftp_port), handler)
+        server = FTPServer(("0.0.0.0", self.ftp_port), handler)
 
         logging.info(f"Inicializando servidor FTP na porta {self.ftp_port}")
         server.serve_forever()
@@ -72,6 +75,7 @@ class Server:
 
         self.http_thread.join()
         self.ftp_thread.join()
+
 
 def get_ips() -> set[str]:
     """
