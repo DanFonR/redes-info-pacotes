@@ -14,7 +14,9 @@ def netlogger(tmp_path: Path) -> NetLogger:
     return NetLogger(str(csv_file))
 
 
-def fake_packet(src="127.0.0.1", dst="127.0.0.2", proto=6, size=100) -> MagicMock:
+def fake_packet(
+    src="127.0.0.1", dst="127.0.0.2", proto=6, size=100
+) -> MagicMock:
     """
     Cria um pacote falso com IP e tamanho definidos.
     """
@@ -68,7 +70,12 @@ def test_processa_pacotes_multiple_logging(netlogger: NetLogger) -> None:
         patch("netlog.sniff", return_value=[pkt1, pkt2]),
         patch("netlog.logging") as mock_log,
     ):
-        netlogger.conexoes = {"127.1.1.1", "127.2.2.2", "127.3.3.3", "127.4.4.4"}
+        netlogger.conexoes = {
+            "127.1.1.1",
+            "127.2.2.2",
+            "127.3.3.3",
+            "127.4.4.4",
+        }
         netlogger.processa_pacotes(timeout=1)
 
         mock_log.info.assert_called_with("Iteração 1 concluída")

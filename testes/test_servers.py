@@ -1,5 +1,7 @@
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import MagicMock, patch
+
 import servers
 
 
@@ -45,31 +47,47 @@ def test_get_ips():
 
 
 def test_start_http_server_calls_serve_forever():
-    with patch("servers.HTTPServer") as mock_http, patch("servers.logging") as mock_log:
+    with patch("servers.HTTPServer") as mock_http, patch(
+        "servers.logging"
+    ) as mock_log:
         instance = mock_http.return_value
         server = servers.Server()
         server.start_http_server()
 
-        mock_http.assert_called_with(("0.0.0.0", 8000), servers.LoggingHTTPHandler)
+        mock_http.assert_called_with(
+            ("0.0.0.0", 8000), servers.LoggingHTTPHandler
+        )
         instance.serve_forever.assert_called_once()
-        mock_log.info.assert_called_with("Inicializando servidor HTTP na porta 8000")
+        mock_log.info.assert_called_with(
+            "Inicializando servidor HTTP na porta 8000"
+        )
 
 
 def test_start_ftp_server_calls_serve_forever():
-    with patch("servers.FTPServer") as mock_ftp, patch("servers.DummyAuthorizer") as mock_auth, patch("servers.logging") as mock_log:
+    with patch("servers.FTPServer") as mock_ftp, patch(
+        "servers.DummyAuthorizer"
+    ), patch("servers.logging") as mock_log:
         instance = mock_ftp.return_value
         server = servers.Server()
         server.start_ftp_server()
 
-        mock_ftp.assert_called_with(("0.0.0.0", 2121), servers.LoggingFTPHandler)
+        mock_ftp.assert_called_with(
+            ("0.0.0.0", 2121), servers.LoggingFTPHandler
+        )
         instance.serve_forever.assert_called_once()
-        mock_log.info.assert_called_with("Inicializando servidor FTP na porta 2121")
+        mock_log.info.assert_called_with(
+            "Inicializando servidor FTP na porta 2121"
+        )
 
 
 def test_server_start_creates_threads():
     server = servers.Server()
-    with patch.object(server, "start_http_server") as mock_http, patch.object(server, "start_ftp_server") as mock_ftp:
-        with patch("threading.Thread.start") as mock_start, patch("threading.Thread.join") as mock_join:
+    with patch.object(server, "start_http_server"), patch.object(
+        server, "start_ftp_server"
+    ):
+        with patch("threading.Thread.start") as mock_start, patch(
+            "threading.Thread.join"
+        ) as mock_join:
             server.start()
             # Verifica que as threads foram criadas e start() foi chamado
             assert server.http_thread is not None

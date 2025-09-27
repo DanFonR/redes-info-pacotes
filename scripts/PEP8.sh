@@ -16,7 +16,7 @@ echo "Rodando isort..."
 isort "$PROJECT_ROOT"
 
 echo "Rodando black..."
-black "$PROJECT_ROOT"
+black --line-length 79 "$PROJECT_ROOT"
 
 echo "Rodando flake8..."
 flake8 "$PROJECT_ROOT"
