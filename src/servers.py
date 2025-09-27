@@ -25,7 +25,7 @@ class LoggingHTTPHandler(SimpleHTTPRequestHandler):
 
 
 class LoggingFTPHandler(FTPHandler):
-    def on_connect(self, username: str) -> None:
+    def on_connect(self) -> None:
         client_ip = self.remote_ip
         logging.info(f"IP {client_ip} conectado via FTP")
 
