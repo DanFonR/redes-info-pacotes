@@ -13,9 +13,7 @@ for pkg in "${pacotes[@]}"; do
     }
 done
 
-if [ "$(python src/ip.py)" -ne 0 ]; then
-    exit 1
-fi
+python src/ip.py || exit 1
 
 trap "kill -9 0" INT # Em caso de Ctrl+C, elimina todos os subprocessos
 
