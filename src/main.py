@@ -2,6 +2,7 @@ import logging
 import os
 from signal import SIGINT, signal
 from threading import Thread
+from types import FrameType
 from typing import NoReturn
 
 from netlog import NetLogger
@@ -14,7 +15,7 @@ CSV_SAIDA: str = os.path.join(PATH, "netlog.csv")
 LOG_SAIDA: str = os.path.join(PATH, "netlog_stat.log")
 
 
-def sigint_handler() -> NoReturn:
+def sigint_handler(sig: int, frame: FrameType) -> NoReturn:
     logging.info("Execução interrompida manualmente")
     exit()
 

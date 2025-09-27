@@ -11,7 +11,6 @@ import sys
 from collections import defaultdict
 from datetime import datetime
 from signal import SIGINT, signal
-from sys import stderr
 from types import FrameType
 
 from _csv import Writer
@@ -172,7 +171,7 @@ class NetLogger:
                 msg = "Erro durante captura: " f"{type(ex).__name__}: {ex}"
                 logging.warning(msg)
 
-        print("Interrompendo...", file=stderr)
+        print("Interrompendo...", file=sys.stderr)
         logging.info("Execução interrompida manualmente")
 
 
