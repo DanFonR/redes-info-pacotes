@@ -14,7 +14,7 @@ from signal import SIGINT, signal
 from types import FrameType
 
 from _csv import Writer
-from scapy.all import Packet, PacketList, sniff
+from scapy.all import Packet, PacketList, get_if_list, sniff
 from scapy.layers.inet import IP
 
 from ip import get_local_ip
@@ -118,7 +118,8 @@ class NetLogger:
 
         pacote: Packet
         bytes_ip: defaultdict
-        pacotes: PacketList = sniff(timeout=timeout)
+        interfaces = get_if_list()
+        pacotes: PacketList = sniff(timeout=timeout, iface=interfaces)
         bytes_ip = defaultdict(lambda: {"enviado": 0, "recebido": 0})
 
         self.conexoes |= get_ips()  # atualiza lista de IPs conectados
@@ -184,5 +185,5 @@ if __name__ == "__main__":
     CSV_SAIDA: str = os.path.join(PATH, "netlog.csv")
     LOG_SAIDA: str = os.path.join(PATH, "netlog_stat.log")
 
-    logger: NetLogger = NetLogger(CSV_SAIDA, LOG_SAIDA)
+    logger: NetLogger = NetLogger(CSV_SAIDA)
     logger.run()
