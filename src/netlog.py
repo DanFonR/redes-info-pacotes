@@ -1,8 +1,17 @@
 """
-NetLogger - Captura de pacotes de rede e estatísticas em CSV e log.
+NetLogger - Captura de pacotes de rede e gera estatísticas em CSV e log.
 
-Requer privilégios de administrador/root.
-No Windows, certifique-se que o Npcap está instalado.
+Funcionalidades principais:
+- Captura pacotes de todas as interfaces de rede usando Scapy.
+- Filtra apenas pacotes envolvendo os IPs coletados (servidores locais e conexões HTTP/FTP).
+- Calcula estatísticas de bytes enviados e recebidos por IP e protocolo.
+- Registra os resultados em um arquivo CSV e também em log.
+- Suporta interrupção manual via CTRL+C (SIGINT).
+
+Requisitos:
+- Privilégios de administrador/root.
+- No Windows, é necessário ter o Npcap instalado.
+- Integra com `servers.get_ips` para incluir IPs conectados aos servidores locais.
 """
 
 import csv
@@ -46,20 +55,33 @@ def hora() -> str:
 
 class NetLogger:
     """
-    Classe para captura de pacotes de rede e registro em CSV e log.
+    Captura pacotes de rede e registra estatísticas em CSV e log.
+
+    Fluxo:
+    - Inicializa o arquivo CSV com cabeçalho.
+    - Entra em um loop contínuo (`run`) capturando pacotes em intervalos.
+    - Processa pacotes para atualizar estatísticas por IP/protocolo.
+    - Escreve os resultados no CSV e no log a cada iteração.
+    - Interrompido manualmente com CTRL+C.
 
     Attributes:
         csv_path (str): Caminho do arquivo CSV de saída.
-        interrompeu (bool): Flag para indicar interrupção manual.
-        numero_iteracao (int): Contador de iterações.
+        interrompeu (bool): Indica se a execução foi interrompida manualmente.
+        numero_iteracao (int): Contador de iterações de captura.
+        conexoes (set[str]): Conjunto de IPs locais ou conectados a servidores.
     """
 
     def __init__(self, csv_path: str):
         """
-        Inicializa o NetLogger, configurando CSV e log.
+        Inicializa o arquivo CSV de saída com o cabeçalho padrão.
 
-        Args:
-            csv_path (str): Caminho do arquivo CSV de saída.
+        Colunas:
+            - data_hora
+            - ip
+            - protocolo
+            - bytes_enviados
+            - bytes_recebidos
+            - tipo (remetente/destino)
         """
 
         self.csv_path: str = csv_path
@@ -111,9 +133,14 @@ class NetLogger:
         """
         Captura pacotes por um período e registra estatísticas em CSV e log.
 
+        Para cada iteração:
+        - Captura pacotes em todas as interfaces por `timeout` segundos.
+        - Filtra pacotes IP que envolvam os IPs conhecidos (conexões + IP local).
+        - Acumula bytes enviados/recebidos por IP e protocolo.
+        - Escreve estatísticas no CSV com timestamp.
+
         Args:
-            timeout (int, optional): \
-            Tempo em segundos para captura de pacotes. 5 por padrão.
+            timeout (int, optional): Tempo em segundos para captura (padrão: 5).
         """
 
         pacote: Packet
@@ -161,6 +188,10 @@ class NetLogger:
     def run(self) -> None:
         """
         Executa o loop de captura contínua até interrupção manual.
+
+        - Chama `processa_pacotes` em loop.
+        - Em caso de erro durante a captura, registra no log e continua.
+        - Sai apenas quando `SIGINT` (CTRL+C) é recebido.
         """
 
         msg: str
@@ -169,7 +200,7 @@ class NetLogger:
             try:
                 self.processa_pacotes()
             except Exception as ex:
-                msg = "Erro durante captura: " f"{type(ex).__name__}: {ex}"
+                msg = f"Erro durante captura: {type(ex).__name__}: {ex}"
                 logging.warning(msg)
 
         print("Interrompendo...", file=sys.stderr)

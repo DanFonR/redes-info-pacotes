@@ -10,15 +10,16 @@ from netlog import NetLogger
 # Fixture para NetLogger com CSV temporário
 @pytest.fixture
 def netlogger(tmp_path: Path) -> NetLogger:
+    """
+    Cria instância do NetLogger com CSV temporário.
+    """
     csv_file: Path = tmp_path / "test.csv"
     return NetLogger(str(csv_file))
 
 
-def fake_packet(
-    src="127.0.0.1", dst="127.0.0.2", proto=6, size=100
-) -> MagicMock:
+def fake_packet(src="127.0.0.1", dst="127.0.0.2", proto=6, size=100) -> MagicMock:
     """
-    Cria um pacote falso com IP e tamanho definidos.
+    Cria um pacote falso com IP e tamanho.
     """
 
     ip: MagicMock = MagicMock()
@@ -36,7 +37,7 @@ def fake_packet(
 
 def test_processa_pacotes_single_logging(netlogger: NetLogger) -> None:
     """
-    Pacote único gera CSV e log corretos.
+    Verifica CSV e log com captura de 1 pacote.
     """
 
     pkt: MagicMock = fake_packet()
@@ -58,7 +59,7 @@ def test_processa_pacotes_single_logging(netlogger: NetLogger) -> None:
 
 def test_processa_pacotes_multiple_logging(netlogger: NetLogger) -> None:
     """
-    Múltiplos pacotes geram CSV e log corretos.
+    Verifica CSV e log com captura de múltiplos pacotes.
     """
 
     pkt1: MagicMock
@@ -88,7 +89,7 @@ def test_processa_pacotes_multiple_logging(netlogger: NetLogger) -> None:
 
 def test_run_interruption(monkeypatch, netlogger: NetLogger) -> None:
     """
-    Testa run() com interrupção imediata (interrompeu=True).
+    Garante que run() respeita interrupção manual.
     """
 
     netlogger.interrompeu = True
@@ -105,6 +106,10 @@ def test_run_interruption(monkeypatch, netlogger: NetLogger) -> None:
 
 
 def test_run_exception_logging(netlogger: NetLogger) -> None:
+    """
+    Verifica se exceções em run() são logadas.
+    """
+
     with (
         patch("netlog.sniff", side_effect=Exception("Erro fake")),
         patch("netlog.logging") as mock_log,
