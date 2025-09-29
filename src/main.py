@@ -1,3 +1,4 @@
+import subprocess
 import logging
 import os
 from signal import SIGINT, signal
@@ -36,14 +37,37 @@ def main() -> None:
     servidores: Server = Server()
     logger: NetLogger = NetLogger(CSV_SAIDA)
 
+    env = os.environ.copy()
+    env["STREAMLIT_DISABLE_ONBOARDING"] = "1"
+
+    streamlit_proc = subprocess.Popen(
+        [
+            "streamlit",
+            "run",
+            os.path.join(SRCPATH, "interface.py"),
+            "--server.headless",
+            "true",
+            "--server.enableCORS",
+            "true",
+            "--server.enableXsrfProtection",
+            "true",
+        ],
+        env=env,
+    )
+
     thread_servidores: Thread = Thread(target=servidores.start, daemon=True)
     thread_logger: Thread = Thread(target=logger.run, daemon=True)
 
     thread_logger.start()
     thread_servidores.start()
 
-    thread_logger.join()
-    thread_servidores.join()
+    try:
+        thread_logger.join()
+        thread_servidores.join()
+    except KeyboardInterrupt:
+        logging.info("Encerrando subprocesso Streamlit e saindo...")
+        streamlit_proc.terminate()
+        streamlit_proc.wait()
 
 
 if __name__ == "__main__":
