@@ -8,16 +8,15 @@ from ip import get_local_ip
 st.set_page_config(page_title="Relatório de Pacotes", layout="wide")
 
 st.title("Relatório de captura de pacotes")
-st.subheader("Resumo por IP")
 
-# Atualização automática a cada 5 segundos (sem piscar a tela inteira)
+# Atualização automática a cada 5 segundos
 st_autorefresh(interval=5000, key="refresh")
 
 # Mostra a URL
 try:
     ip_local = get_local_ip()
     url = f"http://{ip_local}:8000"
-    st.markdown(f"📡 **Acesse a API/serviço no:** [{url}]({url})")
+    st.markdown(f"##### 📡 **Acesse a API/serviço no:** [{url}]({url})")
 except Exception as e:
     st.error(f"Não foi possível obter o IP local: {e}")
 
@@ -42,18 +41,16 @@ df = carregar_dados()
 if df.empty:
     st.warning("Arquivo CSV está vazio. Nenhum dado para exibir.")
 else:
-    # Garantir tipos numéricos
     df["bytes_enviados"] = pd.to_numeric(df["bytes_enviados"], errors="coerce").fillna(0)
     df["bytes_recebidos"] = pd.to_numeric(df["bytes_recebidos"], errors="coerce").fillna(0)
 
-    # Resumo geral por IP
     resumo_ip = df.groupby("ip").agg({
         "bytes_enviados": "sum",
         "bytes_recebidos": "sum"
     }).reset_index()
     resumo_ip.columns = ["IP", "Total Bytes Enviados", "Total Bytes Recebidos"]
 
-    # --- seletor de IP (com chave única e persistência) ---
+    # Seletor de IP
     ip_escolhido = st.selectbox(
         "🔍 Escolha um IP (ou deixe vazio para ver todos):",
         ["(Todos)"] + resumo_ip["IP"].unique().tolist(),
@@ -62,7 +59,7 @@ else:
     )
     st.session_state.ip_escolhido = ip_escolhido
 
-    # --- Se nenhum IP foi escolhido → gráfico por IP ---
+    # Gráfico por IP
     if ip_escolhido == "(Todos)":
         st.dataframe(resumo_ip, use_container_width=True)
 
@@ -73,7 +70,7 @@ else:
             value_name="Bytes"
         )
         grafico = alt.Chart(dados_chart).mark_bar().encode(
-            x="IP:N",
+            x=alt.X("IP:N", title="IP", axis=alt.Axis(labelAngle=0)),
             y="Bytes:Q",
             color=alt.Color("Tipo:N", title="Tipo",
                             scale=alt.Scale(
@@ -87,7 +84,7 @@ else:
         )
         st.altair_chart(grafico, use_container_width=True)
 
-    # --- Se um IP foi escolhido → gráfico por protocolo ---
+    # Gráfico por protocolo
     else:
         df_ip = df[df["ip"] == ip_escolhido]
         resumo_proto = df_ip.groupby("protocolo").agg({
@@ -105,7 +102,7 @@ else:
             value_name="Bytes"
         )
         grafico = alt.Chart(dados_chart).mark_bar().encode(
-            x="Protocolo:N",
+            x=alt.X("Protocolo:N", title="Protocolo", axis=alt.Axis(labelAngle=0)),
             y="Bytes:Q",
             color=alt.Color("Tipo:N", title="Tipo",
                             scale=alt.Scale(
