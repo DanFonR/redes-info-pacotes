@@ -17,7 +17,9 @@ def netlogger(tmp_path: Path) -> NetLogger:
     return NetLogger(str(csv_file))
 
 
-def fake_packet(src="127.0.0.1", dst="127.0.0.2", proto=6, size=100) -> MagicMock:
+def fake_packet(
+    src="127.0.0.1", dst="127.0.0.2", proto=6, size=100
+) -> MagicMock:
     """
     Cria um pacote falso com IP e tamanho.
     """

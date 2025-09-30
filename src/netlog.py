@@ -3,7 +3,8 @@ NetLogger - Captura de pacotes de rede e gera estatísticas em CSV e log.
 
 Funcionalidades principais:
 - Captura pacotes de todas as interfaces de rede usando Scapy.
-- Filtra apenas pacotes envolvendo os IPs coletados (servidores locais e conexões HTTP/FTP).
+- Filtra apenas pacotes envolvendo os IPs coletados
+  (servidores locais e conexões HTTP/FTP).
 - Calcula estatísticas de bytes enviados e recebidos por IP e protocolo.
 - Registra os resultados em um arquivo CSV e também em log.
 - Suporta interrupção manual via CTRL+C (SIGINT).
@@ -11,7 +12,8 @@ Funcionalidades principais:
 Requisitos:
 - Privilégios de administrador/root.
 - No Windows, é necessário ter o Npcap instalado.
-- Integra com `servers.get_ips` para incluir IPs conectados aos servidores locais.
+- Integra com `servers.get_ips` para incluir IPs conectados aos
+  servidores locais.
 """
 
 import csv
@@ -24,7 +26,7 @@ from types import FrameType
 
 from _csv import Writer
 from scapy.all import Packet, PacketList, get_if_list, sniff
-from scapy.layers.inet import IP
+from scapy.layers.inet import IP, TCP
 
 from ip import get_local_ip
 from servers import get_ips
@@ -40,6 +42,22 @@ PROTOCOLOS: dict[int, str] = {
     41: "IPV6",
     58: "IPV6-ICMP",
 }
+
+
+def http_ftp(
+    portas: tuple[int, int], http: int = 8000, ftp: int = 2121
+) -> str:
+    """
+    Converte ``8000`` para ``"HTTP"`` e ``2121`` para ``"FTP"``,
+    para uso no .csv
+    """
+
+    if http in portas:
+        return "HTTP"
+    elif ftp in portas:
+        return "FTP"
+    else:
+        return "Outro"
 
 
 def hora() -> str:
@@ -71,7 +89,7 @@ class NetLogger:
         conexoes (set[str]): Conjunto de IPs locais ou conectados a servidores.
     """
 
-    def __init__(self, csv_path: str):
+    def __init__(self, csv_path: str, portas_proibidas: tuple[int] = (8501,)):
         """
         Inicializa o arquivo CSV de saída com o cabeçalho padrão.
 
@@ -88,6 +106,7 @@ class NetLogger:
         self.interrompeu: bool = False
         self.numero_iteracao: int = 1
         self.conexoes: set[str]
+        self.portas_proibidas: tuple[int] = portas_proibidas
 
         try:
             self.conexoes = {get_local_ip()}
@@ -135,38 +154,49 @@ class NetLogger:
 
         Para cada iteração:
         - Captura pacotes em todas as interfaces por `timeout` segundos.
-        - Filtra pacotes IP que envolvam os IPs conhecidos (conexões + IP local).
+        - Filtra pacotes IP que envolvam os IPs conhecidos
+          (conexões + IP local).
         - Acumula bytes enviados/recebidos por IP e protocolo.
         - Escreve estatísticas no CSV com timestamp.
 
         Args:
-            timeout (int, optional): Tempo em segundos para captura (padrão: 5).
+            timeout (int, optional): Tempo em segundos \
+            para captura (padrão: 5).
         """
 
         pacote: Packet
-        bytes_ip: defaultdict
-        interfaces = get_if_list()
+        bytes_ip: defaultdict[tuple[str, str], dict[str, int]]
+        interfaces: list[str] = get_if_list()
         pacotes: PacketList = sniff(timeout=timeout, iface=interfaces)
         bytes_ip = defaultdict(lambda: {"enviado": 0, "recebido": 0})
 
         self.conexoes |= get_ips()  # atualiza lista de IPs conectados
 
         for pacote in pacotes:
-            if IP not in pacote:  # evita pacotes com ICMP ou IGMP, por exemplo
+            # evita pacotes com ICMP ou IGMP, por exemplo
+            if IP not in pacote or TCP not in pacote:
                 continue
 
             ip: IP = pacote[IP]
-            if ip.src not in self.conexoes or ip.dst not in self.conexoes:
+            tcp: TCP = pacote[TCP]
+            if (
+                ip.src not in self.conexoes or ip.dst not in self.conexoes
+            ) or (
+                tcp.sport in self.portas_proibidas
+                or tcp.dport in self.portas_proibidas
+            ):
                 continue
 
-            protocolo = PROTOCOLOS.get(ip.proto, "Outro")
+            conn_protocolo: str = http_ftp((tcp.sport, tcp.dport))
             tamanho = len(pacote)
-            bytes_ip[(ip.src, protocolo)]["enviado"] += tamanho
-            bytes_ip[(ip.dst, protocolo)]["recebido"] += tamanho
+            bytes_ip[(ip.src, conn_protocolo)]["enviado"] += tamanho
+            bytes_ip[(ip.dst, conn_protocolo)]["recebido"] += tamanho
 
         hora_atual: str = hora()
 
         with open(self.csv_path, "a", newline="") as f:
+            ip_end: str
+            protocolo: str
             writer: Writer = csv.writer(f)
 
             for (ip_end, protocolo), valores in bytes_ip.items():

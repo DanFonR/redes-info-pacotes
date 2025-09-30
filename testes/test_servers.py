@@ -85,4 +85,3 @@ def test_start_ftp_server_calls_serve_forever():
         )
         instance.serve_forever.assert_called_once()
         mock_log.info.as_
-

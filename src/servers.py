@@ -2,11 +2,14 @@
 Módulo de servidores HTTP e FTP com logging e coleta de IPs conectados.
 
 Funcionalidades principais:
-- Servidor HTTP: registra cada conexão e adiciona o IP do cliente ao conjunto global.
-- Servidor FTP: permite conexões anônimas, registra o IP do cliente e também o armazena.
-- Sincronização: o conjunto de IPs (`ip_set`) é protegido por um `Lock` para evitar
-  condições de corrida entre múltiplas threads.
-- Classe `Server`: inicializa e gerencia os servidores HTTP e FTP em threads separadas.
+- Servidor HTTP: registra cada conexão e adiciona o
+  IP do cliente ao conjunto global.
+- Servidor FTP: permite conexões anônimas, registra o IP do cliente
+  e também o armazena.
+- Sincronização: o conjunto de IPs (`ip_set`) é protegido por um `Lock` para
+  evitar condições de corrida entre múltiplas threads.
+- Classe `Server`: inicializa e gerencia os servidores HTTP e FTP
+  em threads separadas.
 
 Uso típico:
     server = Server(http_port=8000, ftp_port=2121)
