@@ -5,13 +5,15 @@ import os
 from streamlit_autorefresh import st_autorefresh
 from ip import get_local_ip
 
-# Atualiza automaticamente a cada 5 segundos
-st_autorefresh(interval=5000, key="auto_refresh")
+st.set_page_config(page_title="Relatório de Pacotes", layout="wide")
 
 st.title("Relatório de captura de pacotes")
 st.subheader("Resumo por IP")
 
-# Mostra a URL para o usuário
+# Atualização automática a cada 5 segundos (sem piscar a tela inteira)
+st_autorefresh(interval=5000, key="refresh")
+
+# Mostra a URL
 try:
     ip_local = get_local_ip()
     url = f"http://{ip_local}:8000"
@@ -19,64 +21,100 @@ try:
 except Exception as e:
     st.error(f"Não foi possível obter o IP local: {e}")
 
+
 @st.cache_data(ttl=5)
 def carregar_dados():
+    """Carrega o CSV e devolve como DataFrame."""
     caminho_csv = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "netlog.csv"))
     try:
         df = pd.read_csv(caminho_csv)
-    except Exception as e:
-        st.error(f"Erro ao ler o arquivo CSV: {e}")
+    except Exception:
         return pd.DataFrame()
-
     return df
 
-# Containers para tabela e gráfico
-tabela_container = st.empty()
-grafico_container = st.empty()
+
+# Estado para guardar IP selecionado
+if "ip_escolhido" not in st.session_state:
+    st.session_state.ip_escolhido = "(Todos)"
 
 df = carregar_dados()
 
 if df.empty:
     st.warning("Arquivo CSV está vazio. Nenhum dado para exibir.")
 else:
-    df["bytes_enviados"] = pd.to_numeric(df["bytes_enviados"], errors='coerce').fillna(0)
-    df["bytes_recebidos"] = pd.to_numeric(df["bytes_recebidos"], errors='coerce').fillna(0)
+    # Garantir tipos numéricos
+    df["bytes_enviados"] = pd.to_numeric(df["bytes_enviados"], errors="coerce").fillna(0)
+    df["bytes_recebidos"] = pd.to_numeric(df["bytes_recebidos"], errors="coerce").fillna(0)
 
-    agrupado = df.groupby("ip").agg({
+    # Resumo geral por IP
+    resumo_ip = df.groupby("ip").agg({
         "bytes_enviados": "sum",
         "bytes_recebidos": "sum"
     }).reset_index()
+    resumo_ip.columns = ["IP", "Total Bytes Enviados", "Total Bytes Recebidos"]
 
-    agrupado.columns = ['IP', 'Total Bytes Enviados', 'Total Bytes Recebidos']
+    # --- seletor de IP (com chave única e persistência) ---
+    ip_escolhido = st.selectbox(
+        "🔍 Escolha um IP (ou deixe vazio para ver todos):",
+        ["(Todos)"] + resumo_ip["IP"].unique().tolist(),
+        index=(["(Todos)"] + resumo_ip["IP"].unique().tolist()).index(st.session_state.ip_escolhido),
+        key="select_ip"
+    )
+    st.session_state.ip_escolhido = ip_escolhido
 
-    if agrupado.empty:
-        st.warning("Não há dados suficientes para agrupar por IP.")
-    else:
-        tabela_container.dataframe(agrupado)
+    # --- Se nenhum IP foi escolhido → gráfico por IP ---
+    if ip_escolhido == "(Todos)":
+        st.dataframe(resumo_ip, use_container_width=True)
 
-        dados_chart = agrupado.melt(
-            id_vars='IP',
-            value_vars=['Total Bytes Recebidos', 'Total Bytes Enviados'],
-            var_name='Tipo',
-            value_name='Bytes'
+        dados_chart = resumo_ip.melt(
+            id_vars="IP",
+            value_vars=["Total Bytes Recebidos", "Total Bytes Enviados"],
+            var_name="Tipo",
+            value_name="Bytes"
         )
-
-        dados_chart = dados_chart[dados_chart["Tipo"].isin(["Total Bytes Recebidos", "Total Bytes Enviados"])]
-
-        dados_chart["Bytes"] = pd.to_numeric(dados_chart["Bytes"], errors='coerce').fillna(0)
-
         grafico = alt.Chart(dados_chart).mark_bar().encode(
-            x=alt.X('IP:N', title='IP'),
-            y=alt.Y('Bytes:Q', title='Bytes', stack='zero'),
-            color=alt.Color('Tipo:N', title='Tipo', scale=alt.Scale(
-                domain=['Total Bytes Recebidos', 'Total Bytes Enviados'],
-                range=['skyblue', 'dodgerblue']
-            )),
-            tooltip=['IP', 'Tipo', 'Bytes']
+            x="IP:N",
+            y="Bytes:Q",
+            color=alt.Color("Tipo:N", title="Tipo",
+                            scale=alt.Scale(
+                                domain=["Total Bytes Recebidos", "Total Bytes Enviados"],
+                                range=["skyblue", "dodgerblue"]
+                            )),
+            tooltip=["IP", "Tipo", "Bytes"]
         ).properties(
-            width='container',
             height=400,
-            title='Total de Bytes Enviados e Recebidos por IP'
+            title="Total de Bytes Enviados e Recebidos por IP"
         )
+        st.altair_chart(grafico, use_container_width=True)
 
-        grafico_container.altair_chart(grafico, use_container_width=True)
+    # --- Se um IP foi escolhido → gráfico por protocolo ---
+    else:
+        df_ip = df[df["ip"] == ip_escolhido]
+        resumo_proto = df_ip.groupby("protocolo").agg({
+            "bytes_enviados": "sum",
+            "bytes_recebidos": "sum"
+        }).reset_index()
+        resumo_proto.columns = ["Protocolo", "Total Bytes Enviados", "Total Bytes Recebidos"]
+
+        st.dataframe(resumo_proto, use_container_width=True)
+
+        dados_chart = resumo_proto.melt(
+            id_vars="Protocolo",
+            value_vars=["Total Bytes Recebidos", "Total Bytes Enviados"],
+            var_name="Tipo",
+            value_name="Bytes"
+        )
+        grafico = alt.Chart(dados_chart).mark_bar().encode(
+            x="Protocolo:N",
+            y="Bytes:Q",
+            color=alt.Color("Tipo:N", title="Tipo",
+                            scale=alt.Scale(
+                                domain=["Total Bytes Recebidos", "Total Bytes Enviados"],
+                                range=["skyblue", "dodgerblue"]
+                            )),
+            tooltip=["Protocolo", "Tipo", "Bytes"]
+        ).properties(
+            height=400,
+            title=f"Total de Bytes Enviados e Recebidos por Protocolo ({ip_escolhido})"
+        )
+        st.altair_chart(grafico, use_container_width=True)
