@@ -1,7 +1,13 @@
 """
-Módulo para obter o IP local da máquina.
+Módulo para obtenção do IP local da máquina.
 
-O IP retornado é o utilizado para acessar a internet/servidores.
+O IP retornado é o associado ao nome do host (hostname) do sistema,
+usando `socket.gethostbyname(socket.gethostname())`.
+
+Observação:
+Esse método pode retornar `127.0.0.1` em algumas configurações
+onde o hostname está associado ao loopback. É adequado para cenários
+simples, mas pode não refletir o IP real usado para acessar a internet.
 """
 
 import socket
@@ -10,11 +16,10 @@ import sys
 
 def get_local_ip() -> str:
     """
-    Retorna o endereço IP local da máquina,
-    usando o nome do host da máquina.
+    Retorna o endereço IP local da máquina, com base no hostname.
 
-    Essa função usa gethostname() para pegar o nome do host
-    e gethostbyname() para obter o IP correspondente.
+    Esse método consulta o nome do host via `socket.gethostname()`
+    e resolve o IP correspondente via `socket.gethostbyname()`.
 
     Returns:
         str: Endereço IP local da máquina.
@@ -22,7 +27,6 @@ def get_local_ip() -> str:
     Raises:
         RuntimeError: Se não for possível determinar o IP local.
     """
-
     try:
         return socket.gethostbyname(socket.gethostname())
     except socket.error as socket_error:
@@ -31,10 +35,10 @@ def get_local_ip() -> str:
 
 def main() -> None:
     """
-    Função principal para execução do módulo como script.
+    Executa o módulo como script.
 
-    Obtém o IP local e imprime no console. Caso ocorra erro, escreve no stderr
-    e encerra o programa com código de erro 1.
+    - Obtém o IP local da máquina e imprime no console.
+    - Em caso de falha, imprime o erro em stderr e encerra com código 1.
     """
 
     try:
