@@ -1,8 +1,8 @@
 from pathlib import Path
+from scapy.layers.inet import IP, TCP
 from unittest.mock import MagicMock, patch
 
 import pytest
-from scapy.layers.inet import IP
 
 from netlog import NetLogger
 
@@ -18,20 +18,29 @@ def netlogger(tmp_path: Path) -> NetLogger:
 
 
 def fake_packet(
-    src="127.0.0.1", dst="127.0.0.2", proto=6, size=100
+    src="127.0.0.1",
+    dst="127.0.0.2",
+    proto=6,
+    size=100,
+    sport=12345,
+    dport=8000,
 ) -> MagicMock:
     """
-    Cria um pacote falso com IP e tamanho.
+    Cria um pacote falso com IP e TCP, adequado para passar pelos filtros de NetLogger.
     """
-
-    ip: MagicMock = MagicMock()
+    ip = MagicMock()
     ip.src = src
     ip.dst = dst
     ip.proto = proto
 
-    pkt: MagicMock = MagicMock()
-    pkt.__contains__.side_effect = lambda x: x == IP
-    pkt.__getitem__.side_effect = lambda x: ip
+    tcp = MagicMock()
+    tcp.sport = sport
+    tcp.dport = dport
+
+    pkt = MagicMock()
+    # suporta 'IP in pkt' e 'TCP in pkt'
+    pkt.__contains__.side_effect = lambda x: x in (IP, TCP)
+    pkt.__getitem__.side_effect = lambda x: ip if x == IP else tcp
     pkt.__len__.return_value = size
 
     return pkt
@@ -41,52 +50,41 @@ def test_processa_pacotes_single_logging(netlogger: NetLogger) -> None:
     """
     Verifica CSV e log com captura de 1 pacote.
     """
-
-    pkt: MagicMock = fake_packet()
-    with (
-        patch("netlog.sniff", return_value=[pkt]),
-        patch("netlog.logging") as mock_log,
-    ):
+    pkt = fake_packet(dport=8000)  # HTTP port
+    with patch("netlog.sniff", return_value=[pkt]), patch("netlog.logging") as mock_log:
         netlogger.conexoes = {"127.0.0.1", "127.0.0.2"}
         netlogger.processa_pacotes(timeout=1)
 
-        # Logging
         mock_log.info.assert_called_with("Iteração 1 concluída")
 
-        # CSV: header + 2 linhas (src/dst)
         with open(netlogger.csv_path) as f:
             lines = f.readlines()
-        assert len(lines) == 3
+        assert len(lines) == 3  # header + 2 linhas (src/dst)
 
 
 def test_processa_pacotes_multiple_logging(netlogger: NetLogger) -> None:
     """
     Verifica CSV e log com captura de múltiplos pacotes.
     """
-
-    pkt1: MagicMock
-    pkt2: MagicMock
-    pkt1 = fake_packet(src="127.1.1.1", dst="127.2.2.2", proto=6, size=50)
-    pkt2 = fake_packet(src="127.3.3.3", dst="127.4.4.4", proto=17, size=70)
+    pkt1 = fake_packet(
+        src="127.1.1.1", dst="127.2.2.2", proto=6, sport=5000, dport=8000
+    )
+    pkt2 = fake_packet(
+        src="127.3.3.3", dst="127.4.4.4", proto=17, sport=6000, dport=2121
+    )  # FTP port
 
     with (
         patch("netlog.sniff", return_value=[pkt1, pkt2]),
         patch("netlog.logging") as mock_log,
     ):
-        netlogger.conexoes = {
-            "127.1.1.1",
-            "127.2.2.2",
-            "127.3.3.3",
-            "127.4.4.4",
-        }
+        netlogger.conexoes = {"127.1.1.1", "127.2.2.2", "127.3.3.3", "127.4.4.4"}
         netlogger.processa_pacotes(timeout=1)
 
         mock_log.info.assert_called_with("Iteração 1 concluída")
 
-        # CSV: header + 4 linhas (2 pacotes x 2)
         with open(netlogger.csv_path) as f:
             lines = f.readlines()
-        assert len(lines) == 5
+        assert len(lines) == 5  # header + 4 linhas (2 pacotes x 2)
 
 
 def test_run_interruption(monkeypatch, netlogger: NetLogger) -> None:
