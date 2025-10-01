@@ -1,3 +1,8 @@
 # SE NO WINDOWS, INSTALE NPCAP EM MODO DE COMPATIBILIDADE
 scapy
 pyftpdlib
+
+# PACOTES PARA A INTERFACE
+streamlit
+streamlit-autorefresh
+pandas
