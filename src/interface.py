@@ -61,7 +61,7 @@ else:
 
     # Gráfico por IP
     if ip_escolhido == "(Todos)":
-        st.dataframe(resumo_ip, use_container_width=True)
+        st.dataframe(resumo_ip)
 
         dados_chart = resumo_ip.melt(
             id_vars="IP",
@@ -69,20 +69,28 @@ else:
             var_name="Tipo",
             value_name="Bytes"
         )
-        grafico = alt.Chart(dados_chart).mark_bar().encode(
-            x=alt.X("IP:N", title="IP", axis=alt.Axis(labelAngle=0)),
+        grafico = alt.Chart(dados_chart).mark_bar(size=250).encode(
+            x=alt.X(
+                "IP:N",
+                title="IP",
+                axis=alt.Axis(labelAngle=0),
+                scale=alt.Scale(paddingInner=0.1, paddingOuter=0.05)
+            ),
             y="Bytes:Q",
-            color=alt.Color("Tipo:N", title="Tipo",
-                            scale=alt.Scale(
-                                domain=["Total Bytes Recebidos", "Total Bytes Enviados"],
-                                range=["skyblue", "dodgerblue"]
-                            )),
+            color=alt.Color(
+                "Tipo:N",
+                title="Tipo",
+                scale=alt.Scale(
+                    domain=["Total Bytes Recebidos", "Total Bytes Enviados"],
+                    range=["skyblue", "dodgerblue"]
+                )
+            ),
             tooltip=["IP", "Tipo", "Bytes"]
         ).properties(
             height=400,
             title="Total de Bytes Enviados e Recebidos por IP"
         )
-        st.altair_chart(grafico, use_container_width=True)
+        st.altair_chart(grafico)
 
     # Gráfico por protocolo
     else:
@@ -93,7 +101,7 @@ else:
         }).reset_index()
         resumo_proto.columns = ["Protocolo", "Total Bytes Enviados", "Total Bytes Recebidos"]
 
-        st.dataframe(resumo_proto, use_container_width=True)
+        st.dataframe(resumo_proto)
 
         dados_chart = resumo_proto.melt(
             id_vars="Protocolo",
@@ -101,17 +109,25 @@ else:
             var_name="Tipo",
             value_name="Bytes"
         )
-        grafico = alt.Chart(dados_chart).mark_bar().encode(
-            x=alt.X("Protocolo:N", title="Protocolo", axis=alt.Axis(labelAngle=0)),
+        grafico = alt.Chart(dados_chart).mark_bar(size=250).encode(
+            x=alt.X(
+                "Protocolo:N",
+                title="Protocolo",
+                axis=alt.Axis(labelAngle=0),
+                scale=alt.Scale(paddingInner=0.1, paddingOuter=0.05)
+            ),
             y="Bytes:Q",
-            color=alt.Color("Tipo:N", title="Tipo",
-                            scale=alt.Scale(
-                                domain=["Total Bytes Recebidos", "Total Bytes Enviados"],
-                                range=["skyblue", "dodgerblue"]
-                            )),
+            color=alt.Color(
+                "Tipo:N",
+                title="Tipo",
+                scale=alt.Scale(
+                    domain=["Total Bytes Recebidos", "Total Bytes Enviados"],
+                    range=["skyblue", "dodgerblue"]
+                )
+            ),
             tooltip=["Protocolo", "Tipo", "Bytes"]
         ).properties(
             height=400,
             title=f"Total de Bytes Enviados e Recebidos por Protocolo ({ip_escolhido})"
         )
-        st.altair_chart(grafico, use_container_width=True)
+        st.altair_chart(grafico)
