@@ -12,7 +12,14 @@
 Este projeto permite monitorar o tráfego de entrada e saída de um servidor.
 Os dados sobre os pacotes são registrados em um arquivo CSV, que pode ser aberto no Excel ou outro visualizador de planilhas.
 
-O script cria servidores **HTTP** e **FTP** para testes de captura de pacotes.
+O projeto também fornece **servidores HTTP e FTP para testes de captura de pacotes** e uma **interface web interativa** construída com [Streamlit](https://streamlit.io) para visualização de dados.
+
+A interface permite:
+
+* Visualizar total de bytes enviados e recebidos por IP.
+* Visualizar total de bytes enviados e recebidos por protocolo.
+* Filtrar dados por IP específico.
+* Atualização automática a cada 5 segundos.
 
 ## Instalação
 
@@ -20,6 +27,9 @@ O script cria servidores **HTTP** e **FTP** para testes de captura de pacotes.
 
 * [Scapy](https://scapy.net/) – biblioteca para manipulação de pacotes de rede.
 * [pyftpdlib](https://pyftpdlib.readthedocs.io/) – biblioteca para criação rápida de servidor FTP.
+* [Streamlit](https://streamlit.io) – framework para interface web interativa.
+* [Pandas](https://pandas.pydata.org/) – manipulação de dados tabulares.
+* [Altair](https://altair-viz.github.io/) – criação de gráficos interativos.
 
 Instale as dependências com:
 
@@ -32,12 +42,12 @@ pip install -r requirements.txt
 ### Windows
 
 Para rodar no Windows, instale o [Npcap](https://npcap.com/) e marque as opções:
-  - _Support raw 802.11 traffic (and monitor mode) for wireless adapters_; e
-  - _Install Npcap in WinPcap API-compatible mode_.
 
-O Npcap fornece a API necessária para captura de pacotes pelo Scapy. 
-O modo de compatibilidade evita a necessidade de privilégios administrativos, 
-e o suporte ao tráfego 802.11 habilita escuta de conexões _wireless_.
+* *Support raw 802.11 traffic (and monitor mode) for wireless adapters*; e
+* *Install Npcap in WinPcap API-compatible mode*.
+
+O Npcap fornece a API necessária para captura de pacotes pelo Scapy.
+O modo de compatibilidade evita a necessidade de privilégios administrativos, e o suporte ao tráfego 802.11 habilita escuta de conexões *wireless*.
 
 ## Execução
 
@@ -52,8 +62,16 @@ No diretório raiz do projeto:
 * **Linux/macOS:**
 
 ```bash
-sudo -E ./scripts/startup.sh
+sudo ./scripts/startup.sh
 ```
+
+Acesse a interface web:
+
+```bash
+streamlit run interface.py
+```
+
+No navegador, será exibida a URL para acessar o relatório (ex.: `http://<IP_DO_HOST>:8501`).
 
 Para testar em outras máquinas:
 
@@ -77,6 +95,7 @@ pip uninstall -r requirements.txt
 ## Desenvolvimento
 
 Instale as dependências de desenvolvimento:
+
 ```bash
 pip install -r requirements-dev.txt
 ```
