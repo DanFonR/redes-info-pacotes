@@ -6,3 +6,4 @@ pyftpdlib
 streamlit
 streamlit-autorefresh
 pandas
+altair
