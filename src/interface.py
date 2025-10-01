@@ -69,7 +69,7 @@ else:
             var_name="Tipo",
             value_name="Bytes"
         )
-        grafico = alt.Chart(dados_chart).mark_bar(size=250).encode(
+        grafico = alt.Chart(dados_chart).mark_bar().encode(
             x=alt.X(
                 "IP:N",
                 title="IP",
@@ -109,7 +109,7 @@ else:
             var_name="Tipo",
             value_name="Bytes"
         )
-        grafico = alt.Chart(dados_chart).mark_bar(size=250).encode(
+        grafico = alt.Chart(dados_chart).mark_bar().encode(
             x=alt.X(
                 "Protocolo:N",
                 title="Protocolo",
