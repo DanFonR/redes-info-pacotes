@@ -1,8 +1,8 @@
 from pathlib import Path
-from scapy.layers.inet import IP, TCP
 from unittest.mock import MagicMock, patch
 
 import pytest
+from scapy.layers.inet import IP, TCP
 
 from netlog import NetLogger
 
@@ -51,7 +51,10 @@ def test_processa_pacotes_single_logging(netlogger: NetLogger) -> None:
     Verifica CSV e log com captura de 1 pacote.
     """
     pkt = fake_packet(dport=8000)  # HTTP port
-    with patch("netlog.sniff", return_value=[pkt]), patch("netlog.logging") as mock_log:
+    with (
+        patch("netlog.sniff", return_value=[pkt]),
+        patch("netlog.logging") as mock_log,
+    ):
         netlogger.conexoes = {"127.0.0.1", "127.0.0.2"}
         netlogger.processa_pacotes(timeout=1)
 
@@ -77,7 +80,12 @@ def test_processa_pacotes_multiple_logging(netlogger: NetLogger) -> None:
         patch("netlog.sniff", return_value=[pkt1, pkt2]),
         patch("netlog.logging") as mock_log,
     ):
-        netlogger.conexoes = {"127.1.1.1", "127.2.2.2", "127.3.3.3", "127.4.4.4"}
+        netlogger.conexoes = {
+            "127.1.1.1",
+            "127.2.2.2",
+            "127.3.3.3",
+            "127.4.4.4",
+        }
         netlogger.processa_pacotes(timeout=1)
 
         mock_log.info.assert_called_with("Iteração 1 concluída")

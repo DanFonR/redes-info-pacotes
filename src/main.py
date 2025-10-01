@@ -2,9 +2,9 @@
 Módulo principal do sistema de captura e monitoramento de rede.
 """
 
-import subprocess
 import logging
 import os
+import subprocess
 from signal import SIGINT, signal
 from threading import Thread
 from typing import NoReturn

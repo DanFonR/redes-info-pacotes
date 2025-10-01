@@ -16,10 +16,11 @@ echo "Rodando isort..."
 isort "$PROJECT_ROOT"
 
 echo "Rodando black..."
-black --line-length 79 "$PROJECT_ROOT"
+black "$PROJECT_ROOT"
 
+# o limite padrão de 79 de tamanho da linha é um saco
 echo "Rodando flake8..."
-flake8 "$PROJECT_ROOT"
+flake8 --max-line-length=999 "$PROJECT_ROOT"
 
 echo "Concluído! Código formatado e verificado."
 

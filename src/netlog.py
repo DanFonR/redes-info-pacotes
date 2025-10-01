@@ -44,9 +44,7 @@ PROTOCOLOS: dict[int, str] = {
 }
 
 
-def http_ftp(
-    portas: tuple[int, int], http: int = 8000, ftp: int = 2121
-) -> str:
+def http_ftp(portas: tuple[int, int], http: int = 8000, ftp: int = 2121) -> str:
     """
     Converte ``8000`` para ``"HTTP"`` e ``2121`` para ``"FTP"``,
     para uso no .csv
@@ -179,11 +177,8 @@ class NetLogger:
 
             ip: IP = pacote[IP]
             tcp: TCP = pacote[TCP]
-            if (
-                ip.src not in self.conexoes or ip.dst not in self.conexoes
-            ) or (
-                tcp.sport in self.portas_proibidas
-                or tcp.dport in self.portas_proibidas
+            if (ip.src not in self.conexoes or ip.dst not in self.conexoes) or (
+                tcp.sport in self.portas_proibidas or tcp.dport in self.portas_proibidas
             ):
                 continue
 

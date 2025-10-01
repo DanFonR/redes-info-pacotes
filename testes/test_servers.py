@@ -54,20 +54,14 @@ def test_get_ips():
 def test_start_http_server_calls_serve_forever():
     """start_http_server inicializa e roda HTTPServer."""
 
-    with patch("servers.HTTPServer") as mock_http, patch(
-        "servers.logging"
-    ) as mock_log:
+    with patch("servers.HTTPServer") as mock_http, patch("servers.logging") as mock_log:
         instance = mock_http.return_value
         server = servers.Server()
         server.start_http_server()
 
-        mock_http.assert_called_with(
-            ("0.0.0.0", 8000), servers.LoggingHTTPHandler
-        )
+        mock_http.assert_called_with(("0.0.0.0", 8000), servers.LoggingHTTPHandler)
         instance.serve_forever.assert_called_once()
-        mock_log.info.assert_called_with(
-            "Inicializando servidor HTTP na porta 8000"
-        )
+        mock_log.info.assert_called_with("Inicializando servidor HTTP na porta 8000")
 
 
 def test_start_ftp_server_calls_serve_forever():
@@ -80,8 +74,6 @@ def test_start_ftp_server_calls_serve_forever():
         server = servers.Server()
         server.start_ftp_server()
 
-        mock_ftp.assert_called_with(
-            ("0.0.0.0", 2121), servers.LoggingFTPHandler
-        )
+        mock_ftp.assert_called_with(("0.0.0.0", 2121), servers.LoggingFTPHandler)
         instance.serve_forever.assert_called_once()
         mock_log.info.as_
