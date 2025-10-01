@@ -27,8 +27,11 @@ st_autorefresh(interval=5000, key="refresh")
 # Mostra a URL
 try:
     ip_local: str = get_local_ip()
-    url:str = f"http://{ip_local}:8000"
-    st.markdown(f"##### 📡 **Acesse a API/serviço no:** [{url}]({url})")
+    http_url: str = f"http://{ip_local}:8000"
+    ftp_url: str = f"ftp://{ip_local}:2121"
+    st.markdown(f"##### 📡 **Acesse a API/serviço em:**")
+    st.markdown(f"HTTP: acesse [{http_url}]({http_url}) no navegador.")
+    st.markdown(f"FTP: acesse [{ftp_url}]({ftp_url}) no explorador de arquivos.")
 except Exception as e:
     st.error(f"Não foi possível obter o IP local: {e}")
 
