@@ -26,21 +26,21 @@ st_autorefresh(interval=5000, key="refresh")
 
 # Mostra a URL
 try:
-    ip_local = get_local_ip()
-    url = f"http://{ip_local}:8000"
+    ip_local: str = get_local_ip()
+    url:str = f"http://{ip_local}:8000"
     st.markdown(f"##### 📡 **Acesse a API/serviço no:** [{url}]({url})")
 except Exception as e:
     st.error(f"Não foi possível obter o IP local: {e}")
 
 
 @st.cache_data(ttl=5)
-def carregar_dados():
+def carregar_dados() -> pd.DataFrame:
     """Carrega o CSV de pacotes e retorna como DataFrame."""
-    caminho_csv = os.path.abspath(
+    caminho_csv: str = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "netlog.csv")
     )
     try:
-        df = pd.read_csv(caminho_csv)
+        df: pd.DataFrame = pd.read_csv(caminho_csv)
     except Exception:
         return pd.DataFrame()
     return df
@@ -50,7 +50,7 @@ def carregar_dados():
 if "ip_escolhido" not in st.session_state:
     st.session_state.ip_escolhido = "(Todos)"
 
-df = carregar_dados()
+df: pd.DataFrame = carregar_dados()
 
 if df.empty:
     st.warning("Arquivo CSV está vazio. Nenhum dado para exibir.")
@@ -62,7 +62,7 @@ else:
         df["bytes_recebidos"], errors="coerce"
     ).fillna(0)
 
-    resumo_ip = (
+    resumo_ip: pd.DataFrame = (
         df.groupby("ip")
         .agg({"bytes_enviados": "sum", "bytes_recebidos": "sum"})
         .reset_index()
@@ -70,7 +70,7 @@ else:
     resumo_ip.columns = ["IP", "Total Bytes Enviados", "Total Bytes Recebidos"]
 
     # Seletor de IP
-    ip_escolhido = st.selectbox(
+    ip_escolhido: str = st.selectbox(
         "🔍 Escolha um IP (ou deixe vazio para ver todos):",
         ["(Todos)"] + resumo_ip["IP"].unique().tolist(),
         index=(["(Todos)"] + resumo_ip["IP"].unique().tolist()).index(
@@ -84,13 +84,13 @@ else:
     if ip_escolhido == "(Todos)":
         st.dataframe(resumo_ip)
 
-        dados_chart = resumo_ip.melt(
+        dados_chart: pd.DataFrame = resumo_ip.melt(
             id_vars="IP",
             value_vars=["Total Bytes Recebidos", "Total Bytes Enviados"],
             var_name="Tipo",
             value_name="Bytes",
         )
-        grafico = (
+        grafico: alt.Chart = (
             alt.Chart(dados_chart)
             .mark_bar()
             .encode(
@@ -120,8 +120,8 @@ else:
 
     # Gráfico por protocolo
     else:
-        df_ip = df[df["ip"] == ip_escolhido]
-        resumo_proto = (
+        df_ip: pd.DataFrame = df[df["ip"] == ip_escolhido]
+        resumo_proto: pd.DataFrame = (
             df_ip.groupby("protocolo")
             .agg({"bytes_enviados": "sum", "bytes_recebidos": "sum"})
             .reset_index()
@@ -134,13 +134,13 @@ else:
 
         st.dataframe(resumo_proto)
 
-        dados_chart = resumo_proto.melt(
+        dados_chart: pd.DataFrame = resumo_proto.melt(
             id_vars="Protocolo",
             value_vars=["Total Bytes Recebidos", "Total Bytes Enviados"],
             var_name="Tipo",
             value_name="Bytes",
         )
-        grafico = (
+        grafico: alt.Chart = (
             alt.Chart(dados_chart)
             .mark_bar()
             .encode(
